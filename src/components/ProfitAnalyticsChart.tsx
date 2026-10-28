@@ -45,88 +45,90 @@ export const ProfitAnalyticsChart: React.FC<ProfitAnalyticsChartProps> = ({
   const [timeRange, setTimeRange] = useState<'7d' | '14d' | '30d'>('14d');
   const [chartType, setChartType] = useState<'cumulative' | 'daily' | 'categories'>('cumulative');
 
-  // Generate historical timeline data based on actual market spreads (eSIM $10.10, VPN $19.50, Win11 $12.50, Cloud $14.00)
+  // Timeline data computed strictly from real on-chain ledger orders (Zero simulation)
   const timelineData = useMemo(() => {
-    const daysCount = timeRange === '7d' ? 7 : timeRange === '14d' ? 14 : 30;
-    const now = new Date();
-    const result = [];
+    if (!ledger || ledger.length === 0) return [];
 
-    // Base progression reflecting real daily volumes of wholesale digital goods
-    const baselineDailyOrders = [
-      { orders: 3, commission: 34.70, sales: 67.50 },
-      { orders: 4, commission: 48.20, sales: 94.00 },
-      { orders: 5, commission: 59.80, sales: 118.50 },
-      { orders: 4, commission: 45.60, sales: 88.00 },
-      { orders: 6, commission: 72.10, sales: 142.00 },
-      { orders: 7, commission: 86.40, sales: 169.50 },
-      { orders: 6, commission: 78.50, sales: 154.00 },
-      { orders: 8, commission: 98.20, sales: 192.00 },
-      { orders: 9, commission: 112.50, sales: 221.00 },
-      { orders: 8, commission: 99.40, sales: 195.00 },
-      { orders: 10, commission: 126.80, sales: 248.50 },
-      { orders: 11, commission: 139.20, sales: 272.00 },
-      { orders: 12, commission: 154.60, sales: 301.50 },
-      { orders: 14, commission: 178.40, sales: 348.00 },
-    ];
+    const dateMap = new Map<string, {
+      date: string;
+      rawDate: string;
+      dailyCommission: number;
+      dailySales: number;
+      supplierCost: number;
+      dailyOrders: number;
+    }>();
+
+    ledger.forEach((item) => {
+      const d = new Date(item.timestamp);
+      const rawDate = d.toISOString().split('T')[0];
+      const dateLabel = d.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' });
+
+      const existing = dateMap.get(rawDate) || {
+        date: dateLabel,
+        rawDate,
+        dailyCommission: 0,
+        dailySales: 0,
+        supplierCost: 0,
+        dailyOrders: 0,
+      };
+
+      existing.dailyCommission = Number((existing.dailyCommission + item.netCommissionToUserUsd).toFixed(2));
+      existing.dailySales = Number((existing.dailySales + item.totalPaidByCustomerUsd).toFixed(2));
+      existing.supplierCost = Number((existing.supplierCost + item.wholesaleSupplierCostUsd).toFixed(2));
+      existing.dailyOrders += 1;
+
+      dateMap.set(rawDate, existing);
+    });
+
+    const sortedDays = Array.from(dateMap.values()).sort((a, b) => a.rawDate.localeCompare(b.rawDate));
 
     let runningCumulativeCommission = 0;
     let runningCumulativeSales = 0;
 
-    for (let i = daysCount - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(now.getDate() - i);
-      const dateLabel = d.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' });
-
-      // Pattern lookup with slight deterministic variance
-      const patternIdx = (daysCount - 1 - i) % baselineDailyOrders.length;
-      const base = baselineDailyOrders[patternIdx];
-      
-      const multiplier = 1 + ((daysCount - 1 - i) / daysCount) * 0.45; // Progressive organic growth
-      const dailyCommission = Number((base.commission * multiplier).toFixed(2));
-      const dailySales = Number((base.sales * multiplier).toFixed(2));
-      const dailyOrders = Math.round(base.orders * multiplier);
-      const supplierCost = Number((dailySales - dailyCommission).toFixed(2));
-
-      runningCumulativeCommission = Number((runningCumulativeCommission + dailyCommission).toFixed(2));
-      runningCumulativeSales = Number((runningCumulativeSales + dailySales).toFixed(2));
-
-      result.push({
-        date: dateLabel,
-        rawDate: d.toISOString().split('T')[0],
-        dailyCommission,
-        dailySales,
-        supplierCost,
-        dailyOrders,
+    return sortedDays.map((day) => {
+      runningCumulativeCommission = Number((runningCumulativeCommission + day.dailyCommission).toFixed(2));
+      runningCumulativeSales = Number((runningCumulativeSales + day.dailySales).toFixed(2));
+      return {
+        ...day,
         cumulativeCommission: runningCumulativeCommission,
         cumulativeSales: runningCumulativeSales,
-        marginPercent: Number(((dailyCommission / dailySales) * 100).toFixed(1)),
-      });
-    }
+        marginPercent: day.dailySales > 0 ? Number(((day.dailyCommission / day.dailySales) * 100).toFixed(1)) : 0,
+      };
+    });
+  }, [ledger]);
 
-    return result;
-  }, [timeRange]);
-
-  // Category breakdown for digital goods
+  // Category breakdown computed strictly from real ledger orders
   const categoryData = useMemo(() => {
-    return [
-      { name: 'شرائح الاتصال eSIM', value: 42, commissionRate: '54.6%', color: '#10b981', totalProfit: '$424.20' },
-      { name: 'تراخيص الويندوز والبرمجيات', value: 28, commissionRate: '65.8%', color: '#06b6d4', totalProfit: '$350.00' },
-      { name: 'شبكات VPN والخصوصية', value: 18, commissionRate: '47.0%', color: '#8b5cf6', totalProfit: '$273.00' },
-      { name: 'رصيد الذكاء الاصطناعي Cloud', value: 12, commissionRate: '26.4%', color: '#f59e0b', totalProfit: '$168.00' },
-    ];
-  }, []);
+    if (!ledger || ledger.length === 0) return [];
+    const catMap = new Map<string, { totalProfit: number; count: number }>();
+    ledger.forEach((item) => {
+      const cat = item.category || 'أخرى';
+      const prev = catMap.get(cat) || { totalProfit: 0, count: 0 };
+      prev.totalProfit = Number((prev.totalProfit + item.netCommissionToUserUsd).toFixed(2));
+      prev.count += 1;
+      catMap.set(cat, prev);
+    });
+    const colors = ['#10b981', '#06b6d4', '#8b5cf6', '#f59e0b', '#ec4899'];
+    return Array.from(catMap.entries()).map(([name, data], idx) => ({
+      name,
+      value: data.count,
+      commissionRate: `${((data.totalProfit / (data.count * 20)) * 100).toFixed(0)}%`,
+      color: colors[idx % colors.length],
+      totalProfit: `$${data.totalProfit.toFixed(2)}`,
+    }));
+  }, [ledger]);
 
-  // Summary statistics
+  // Summary statistics from real ledger
   const stats = useMemo(() => {
-    if (timelineData.length === 0) return { totalComm: 0, totalSales: 0, avgDaily: 0, avgMargin: 0 };
-    const last = timelineData[timelineData.length - 1];
-    const totalComm = last.cumulativeCommission;
-    const totalSales = last.cumulativeSales;
-    const avgDaily = Number((totalComm / timelineData.length).toFixed(2));
-    const avgMargin = Number(((totalComm / totalSales) * 100).toFixed(1));
+    if (!ledger || ledger.length === 0) return { totalComm: 0, totalSales: 0, avgDaily: 0, avgMargin: 0 };
+    const totalComm = ledger.reduce((sum, it) => sum + it.netCommissionToUserUsd, 0);
+    const totalSales = ledger.reduce((sum, it) => sum + it.totalPaidByCustomerUsd, 0);
+    const days = timelineData.length || 1;
+    const avgDaily = Number((totalComm / days).toFixed(2));
+    const avgMargin = totalSales > 0 ? Number(((totalComm / totalSales) * 100).toFixed(1)) : 0;
 
-    return { totalComm, totalSales, avgDaily, avgMargin };
-  }, [timelineData]);
+    return { totalComm: Number(totalComm.toFixed(2)), totalSales: Number(totalSales.toFixed(2)), avgDaily, avgMargin };
+  }, [ledger, timelineData]);
 
   // Custom Dark Tooltip Component
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -314,14 +316,26 @@ export const ProfitAnalyticsChart: React.FC<ProfitAnalyticsChartProps> = ({
 
       {/* Main Interactive Recharts Surface */}
       <div className="border border-slate-800 bg-slate-900/50 rounded-2xl p-6 space-y-4">
-        {/* Chart View 1: Cumulative Area Growth */}
-        {chartType === 'cumulative' && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
+        {timelineData.length === 0 ? (
+          <div className="py-20 text-center space-y-3">
+            <div className="w-12 h-12 rounded-full bg-slate-800/80 border border-slate-700 mx-auto flex items-center justify-center text-slate-400">
+              <TrendingUp className="w-6 h-6 text-slate-400" />
+            </div>
+            <h4 className="text-base font-bold text-white">لا توجد عمليات بيع حقيقية مؤكدة بعد</h4>
+            <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+              تم استئصال أي محاكاة أو بيانات وهمية. هذا المخطط يعرض حصرياً المعاملات الفعلية المؤكدة على البلوكشين (TRON / Polygon). عند إتمام أول عملية بيع حقيقية بالـ USDT، سيتم رسم مسار العمولات الفعلي هنا تلقائياً.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Chart View 1: Cumulative Area Growth */}
+            {chartType === 'cumulative' && (
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <span>منحنى نمو العمولات التراكمية الصافية (Cumulative Commission Velocity)</span>
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <span>منحنى نمو العمولات التراكمية الصافية (Cumulative Commission Velocity)</span>
+                    </h3>
                 <span className="text-xs text-slate-400">
                   يوضح التصاعد المستمر لرصيد الأرباح المحولة لمحفظتك بمرور الأيام
                 </span>
@@ -535,6 +549,8 @@ export const ProfitAnalyticsChart: React.FC<ProfitAnalyticsChartProps> = ({
             </div>
           </div>
         )}
+      </>
+    )}
 
         {/* Bottom Blockchain Guarantee Note */}
         <div className="pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">

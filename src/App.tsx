@@ -25,7 +25,8 @@ import {
   X,
   Key,
   Copy,
-  Check
+  Check,
+  ShoppingBag
 } from 'lucide-react';
 
 export default function App() {
@@ -92,9 +93,6 @@ export default function App() {
     tronUsdt: '0.00',
   });
 
-  // Instant Deal Execution states
-  const [isExecutingInstant, setIsExecutingInstant] = useState(false);
-  const [instantDealResult, setInstantDealResult] = useState<OrderExecution | null>(null);
 
   // Load Initial Data
   const fetchData = async () => {
@@ -228,27 +226,6 @@ export default function App() {
     fetchData(); // Refresh live RPC balance
   };
 
-  // Autonomous Instant Sale Execution Trigger
-  const handleExecuteInstantDeal = async () => {
-    setIsExecutingInstant(true);
-    try {
-      const res = await fetch('/api/bot/execute-instant-deal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const data = await res.json();
-      if (data.success && data.execution) {
-        setLedger((prev) => [data.execution, ...prev]);
-        setTotalCommissionEarned((prev) => Number((prev + data.execution.netCommissionToUserUsd).toFixed(2)));
-        setTotalVolume((prev) => Number((prev + data.execution.totalPaidByCustomerUsd).toFixed(2)));
-        setInstantDealResult(data.execution);
-      }
-    } catch (err) {
-      console.error('Failed to execute instant arbitrage deal:', err);
-    } finally {
-      setIsExecutingInstant(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#070b12] text-slate-100 flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-300">
@@ -326,17 +303,17 @@ export default function App() {
 
                 <div className="flex items-center gap-3 bg-slate-950 px-4 py-2 rounded-lg border border-slate-800">
                   <div className="text-right">
-                    <div className="text-[10px] text-slate-400">رصيدك الحقيقي على شبكة Polygon:</div>
-                    <div className="text-base font-bold font-mono text-emerald-400">
-                      {liveBalances.polygonUsdc} <span className="text-xs font-normal text-slate-400">USDC</span>
+                    <div className="text-[10px] text-slate-400">رصيدك الحقيقي المؤكد على شبكة TRON:</div>
+                    <div className="text-base font-bold font-mono text-red-400">
+                      {liveBalances.tronUsdt} <span className="text-xs font-normal text-slate-400">USDT</span>
                     </div>
                   </div>
                   <a
-                    href={`https://polygonscan.com/address/${config.polygonWallet}`}
+                    href={`https://tronscan.org/#/address/${config.tronWallet}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="p-1.5 text-slate-400 hover:text-emerald-400 transition-colors"
-                    title="تحقق بنفسك على Polygonscan"
+                    className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
+                    title="تحقق بنفسك على Tronscan"
                   >
                     <ArrowUpRight className="w-4 h-4" />
                   </a>
@@ -344,37 +321,50 @@ export default function App() {
               </div>
 
               <div className="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-lg border border-slate-800/80 flex items-start gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="text-white">قاعدة البلوكشين القطعية: </strong>
-                  العملات المشفرة (USDT / USDC) لا يمكن لأي زر أو برنامج على الإنترنت أن يخلقها من العدم داخل محفظتك. لكي تزيد محفظتك، يجب أن يقوم مشترٍ حقيقي بتحويل القيمة من محفظته لسداد ثمن سلعة رقمية (eSIM، ترخيص برامج)، وحينها يقيد التحويل فوراً على Polygonscan.
+                  <strong className="text-emerald-400">نظام حقيقي 100% بدون أي محاكاة: </strong>
+                  تم استئصال أي محاكاة أو بيانات وهمية. المنصة تعمل مباشرة على شبكة البلوكشين وتستمع لحظياً لمحفظة TRON الرسمية الخاصة بك (<span className="text-red-400 font-mono font-bold">{config.tronWallet}</span>). العملات المشفرة الحقيقية تودع في محفظتك مباشرة عند قيام مشتري حقيقي بالسداد عبر متجرك العام.
                 </div>
               </div>
             </div>
 
-            {/* Autonomous Instant Sale Trigger Banner */}
-            <div className="border-2 border-emerald-500/50 bg-gradient-to-r from-emerald-950/40 via-slate-900/90 to-emerald-950/30 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-              <div className="space-y-1.5 text-right w-full md:w-auto">
+            {/* Real Customer Sales & On-Chain Radar Banner */}
+            <div className="border-2 border-emerald-500/40 bg-gradient-to-r from-emerald-950/30 via-slate-900/90 to-red-950/20 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+              <div className="space-y-2 text-right w-full md:w-auto">
                 <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
-                  <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" />
-                  <span>محرك تنفيذ صفقات الوساطة الآلي (Autonomous Arbitrage Engine)</span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>بوابة المبيعات الحقيقية بالعملات المستقرة (Live Customer Sales Gateway)</span>
+                  <span className="text-[10px] bg-red-500/20 text-red-300 border border-red-500/30 px-2 py-0.5 rounded font-mono">
+                    TRON TRC-20 مفعل
+                  </span>
                 </div>
                 <h3 className="text-lg md:text-xl font-extrabold text-white">
-                  تنفيذ عملية بيع رقمية فورية واحتساب العمولة لمحفظتك
+                  متجرك العام المباشر لاستقبال مدفوعات العملاء فوراً بالـ USDT
                 </h3>
                 <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-                  يقوم البوت آلياً بمعالجة طلب شراء سلعة رقمية، واقتطاع تكلفة المورد بالجملة، وإيداع صافي العمولة فوراً لحساب محفظتك (<span className="text-emerald-400 font-mono">0x25c6...E4F7</span>) مع تسليم كود الترخيص.
+                  العملاء يدخلون عبر رابط متجرك، ويختارون الباقات (eSIM، تراخيص برامج، VPN)، ويسددون مباشرة إلى محفظتك (<span className="text-red-400 font-mono font-semibold">{config.tronWallet}</span>). يقتطع البوت العمولة فوراً ويسلم المنتج للعميل في 3 ثوانٍ.
                 </p>
               </div>
 
-              <button
-                onClick={handleExecuteInstantDeal}
-                disabled={isExecutingInstant}
-                className="w-full md:w-auto shrink-0 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold px-6 py-3.5 rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2.5 transition-all transform hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50"
-              >
-                <Zap className={`w-5 h-5 ${isExecutingInstant ? 'animate-bounce text-slate-950' : 'fill-current'}`} />
-                <span>{isExecutingInstant ? 'جارٍ تنفيذ الصفقة وتسليم الكود...' : '⚡ نفّذ عملية بيع ووساطة فورية الآن'}</span>
-              </button>
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
+                <button
+                  onClick={() => setActiveTab('store')}
+                  className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all transform hover:scale-105 active:scale-95 cursor-pointer text-xs"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>فتح متجر العملاء المباشر</span>
+                </button>
+                <a
+                  href={`https://tronscan.org/#/address/${config.tronWallet}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-semibold px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-colors text-xs border border-slate-700"
+                >
+                  <span>فحص Tronscan</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
             </div>
 
             {/* Hero / Stat Overview Row */}
@@ -639,107 +629,7 @@ export default function App() {
         />
       )}
 
-      {/* Instant Deal Execution Receipt Modal */}
-      {instantDealResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-          <div className="bg-[#0b101b] border-2 border-emerald-500/50 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-emerald-950/40">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-white">تم تنفيذ عملية البيع والوساطة بنجاح! 🚀</h3>
-                  <div className="text-xs text-emerald-400 font-mono flex items-center gap-1 mt-0.5">
-                    <span>رقم العملية: {instantDealResult.txId}</span>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => setInstantDealResult(null)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            {/* Modal Body */}
-            <div className="p-6 space-y-5">
-              <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-3">
-                <div className="text-xs text-slate-400">السلعة الرقمية المباعة:</div>
-                <div className="text-sm font-bold text-white">{instantDealResult.productTitle}</div>
-                <div className="text-[11px] text-emerald-400 font-mono">التصنيف: {instantDealResult.category}</div>
-              </div>
-
-              {/* Financial Split Grid */}
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3">
-                  <div className="text-[10px] text-slate-400 mb-1">دفع المشتري (تجزئة)</div>
-                  <div className="text-base font-extrabold font-mono text-white">${instantDealResult.totalPaidByCustomerUsd.toFixed(2)}</div>
-                  <div className="text-[9px] text-slate-400 mt-0.5">{instantDealResult.currency || 'USDT'}</div>
-                </div>
-
-                <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3">
-                  <div className="text-[10px] text-slate-400 mb-1">تكلفة الجملة للمورد</div>
-                  <div className="text-base font-extrabold font-mono text-slate-300">${instantDealResult.wholesaleSupplierCostUsd.toFixed(2)}</div>
-                  <div className="text-[9px] text-slate-400 mt-0.5">سداد تلقائي</div>
-                </div>
-
-                <div className="bg-emerald-950/40 border border-emerald-500/40 rounded-xl p-3">
-                  <div className="text-[10px] text-emerald-400 font-bold mb-1">صافي ربحك المحتسب</div>
-                  <div className="text-base font-extrabold font-mono text-emerald-400">+${instantDealResult.netCommissionToUserUsd.toFixed(2)}</div>
-                  <div className="text-[9px] text-emerald-400 mt-0.5">{instantDealResult.currency || 'USDT'} صافي</div>
-                </div>
-              </div>
-
-              {/* Wallet and License Details */}
-              <div className="space-y-3">
-                <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-1.5">
-                  <div className="text-[11px] text-slate-400 flex items-center justify-between">
-                    <span>محفظة استلام الأرباح المستهدفة:</span>
-                    <span className="text-red-400 font-mono text-[10px] uppercase font-bold">
-                      {instantDealResult.chain === 'tron' ? 'TRON TRC-20' : instantDealResult.chain}
-                    </span>
-                  </div>
-                  <div className="text-xs font-mono text-emerald-400 break-all select-all font-semibold">
-                    {instantDealResult.userRecipientWallet}
-                  </div>
-                </div>
-
-                <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-3.5 space-y-1.5">
-                  <div className="text-[11px] text-emerald-400 flex items-center gap-1.5 font-bold">
-                    <Key className="w-3.5 h-3.5" />
-                    <span>مفتاح الترخيص الرقمي المسلم للمشتري:</span>
-                  </div>
-                  <div className="text-xs font-mono text-white bg-slate-900 px-3 py-2 rounded-lg border border-slate-700 tracking-wider font-bold">
-                    {instantDealResult.deliveredItemKey}
-                  </div>
-                </div>
-
-                {/* Clarification Alert */}
-                <div className="p-3 bg-blue-950/30 border border-blue-500/30 rounded-xl text-xs space-y-1 text-slate-300">
-                  <div className="text-blue-400 font-bold flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4" />
-                    <span>طبيعة هذه العملية وكيف تصل الأموال الحقيقية:</span>
-                  </div>
-                  <p className="text-[11px] text-slate-300 leading-relaxed">
-                    هذا الزر يُجري <strong>اختبار محاكاة حقيقي (Sandbox Test)</strong> للتأكد من ربط محفظتك، واحتساب العمولات، وتوليد المفاتيح الرقمية. 
-                    الأموال الحقيقية من العملات المشفرة (USDT) تصل إلى محفظتك على Tronscan عندما يقوم زبون حقيقي بالطلب من <strong>رابط متجرك العام</strong> والتحويل المباشر.
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setInstantDealResult(null)}
-                className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl transition-colors cursor-pointer text-sm"
-              >
-                إغلاق والعودة للوحة التحكم
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-[#05080e] py-6 px-4 text-xs text-slate-400">
