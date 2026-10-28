@@ -17,7 +17,7 @@ export const ExecutionModal: React.FC<ExecutionModalProps> = ({
 }) => {
   if (!item) return null;
 
-  const [selectedChain, setSelectedChain] = useState<'polygon' | 'base' | 'tron'>('polygon');
+  const [selectedChain, setSelectedChain] = useState<'polygon' | 'base' | 'tron'>('tron');
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [copiedAmount, setCopiedAmount] = useState(false);
   const [inputTxHash, setInputTxHash] = useState('');
@@ -25,7 +25,7 @@ export const ExecutionModal: React.FC<ExecutionModalProps> = ({
   const [verificationError, setVerificationError] = useState<string | null>(null);
   const [verifiedResult, setVerifiedResult] = useState<OrderExecution | null>(null);
   const [showManualInput, setShowManualInput] = useState(false);
-  const [pollStatus, setPollStatus] = useState<string>('البوت يستمع لشبكة Polygon PoS ويلتقط التحويلات آلياً...');
+  const [pollStatus, setPollStatus] = useState<string>('البوت يستمع لشبكة TRON ويلتقط تحويلات USDT آلياً...');
 
   const activeWallet = selectedChain === 'tron' ? config.tronWallet : config.polygonWallet;
   const currency = selectedChain === 'tron' ? 'USDT' : 'USDC';
@@ -137,6 +137,22 @@ export const ExecutionModal: React.FC<ExecutionModalProps> = ({
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
+                    onClick={() => { setSelectedChain('tron'); setVerificationError(null); }}
+                    className={`py-2 px-3 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
+                      selectedChain === 'tron'
+                        ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300 font-bold'
+                        : 'border-slate-800 bg-slate-900/40 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>TRON TRC-20 (USDT)</span>
+                      <span className="text-[9px] bg-red-500/20 text-red-300 px-1 rounded">مفضلة</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-0.5 text-right">تحصيل USDT مباشر</div>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => { setSelectedChain('polygon'); setVerificationError(null); }}
                     className={`py-2 px-3 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
                       selectedChain === 'polygon'
@@ -146,19 +162,6 @@ export const ExecutionModal: React.FC<ExecutionModalProps> = ({
                   >
                     <div>Polygon PoS (USDC)</div>
                     <div className="text-[10px] text-slate-400 mt-0.5">رسوم غاز شبه معدومة</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedChain('tron'); setVerificationError(null); }}
-                    className={`py-2 px-3 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
-                      selectedChain === 'tron'
-                        ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300 font-bold'
-                        : 'border-slate-800 bg-slate-900/40 text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <div>TRON TRC-20 (USDT)</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">شبكة TRON العالمية</div>
                   </button>
                 </div>
               </div>

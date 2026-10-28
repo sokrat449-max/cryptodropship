@@ -11,7 +11,7 @@ export const WalletConfigSection: React.FC<WalletConfigSectionProps> = ({ config
   const [polygonWallet, setPolygonWallet] = useState(config.polygonWallet || '0x25c6a4F452e2201620C11C75b050D0700dAfE4F7');
   const [baseWallet, setBaseWallet] = useState(config.baseWallet || '0x25c6a4F452e2201620C11C75b050D0700dAfE4F7');
   const [tronWallet, setTronWallet] = useState(config.tronWallet || 'TFaw7VkUDSvHT2sV9rqAGLKj17eqhenB6q');
-  const [preferredChain, setPreferredChain] = useState(config.preferredChain || 'polygon');
+  const [preferredChain, setPreferredChain] = useState(config.preferredChain || 'tron');
   const [defaultCommissionRate, setDefaultCommissionRate] = useState(config.defaultCommissionRate || 22.5);
   const [minProfitMarginUsd, setMinProfitMarginUsd] = useState(config.minProfitMarginUsd || 5.0);
   const [autoExecute, setAutoExecute] = useState(config.autoExecute);
@@ -93,7 +93,69 @@ export const WalletConfigSection: React.FC<WalletConfigSectionProps> = ({ config
       <form onSubmit={handleSave} className="space-y-6">
         {/* Wallet Address Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* 1. Polygon USDC */}
+          {/* 1. TRON TRC-20 USDT (Preferred Default) */}
+          <div className={`border rounded-xl p-5 transition-all ${
+            preferredChain === 'tron'
+              ? 'border-emerald-500 bg-slate-900/90 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-500/30'
+              : 'border-slate-800 bg-slate-900/40'
+          }`}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-md bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400 font-bold text-xs">
+                  TRX
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">TRON TRC-20 (USDT)</h3>
+                  <span className="text-[11px] text-slate-400">الأكثر انتشاراً في التجارة العالمية</span>
+                </div>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded text-red-300 bg-red-500/20 border border-red-500/30 font-bold">
+                ★ الشبكة المفضلة
+              </span>
+            </div>
+
+            <div className="relative mb-2">
+              <input
+                type="text"
+                value={tronWallet}
+                onChange={(e) => setTronWallet(e.target.value)}
+                dir="ltr"
+                className="w-full bg-slate-950 border border-emerald-500/40 rounded-lg px-3 py-2 text-xs font-mono text-emerald-300 focus:outline-none focus:border-emerald-400 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => handleCopy(tronWallet, 'tron')}
+                className="absolute left-2 top-2 p-1 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                title="نسخ العنوان"
+              >
+                {copiedKey === 'tron' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+              <a
+                href={`https://tronscan.org/#/address/${tronWallet}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-red-400 hover:underline flex items-center gap-1 font-mono"
+              >
+                <span>فحص على Tronscan</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+
+              <button
+                type="button"
+                onClick={() => setPreferredChain('tron')}
+                className={`text-[11px] font-medium transition-colors cursor-pointer ${
+                  preferredChain === 'tron' ? 'text-emerald-400 font-semibold underline' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {preferredChain === 'tron' ? '● الشبكة المفضلة' : 'تعيين كمفضلة'}
+              </button>
+            </div>
+          </div>
+
+          {/* 2. Polygon USDC */}
           <div className={`border rounded-xl p-5 transition-all ${
             preferredChain === 'polygon'
               ? 'border-emerald-500 bg-slate-900/90 shadow-lg shadow-emerald-500/10'
@@ -155,7 +217,7 @@ export const WalletConfigSection: React.FC<WalletConfigSectionProps> = ({ config
             </div>
           </div>
 
-          {/* 2. Base L2 / Ethereum USDC */}
+          {/* 3. Base L2 / Ethereum USDC */}
           <div className={`border rounded-xl p-5 transition-all ${
             preferredChain === 'base'
               ? 'border-emerald-500 bg-slate-900/90 shadow-lg shadow-emerald-500/10'
@@ -213,68 +275,6 @@ export const WalletConfigSection: React.FC<WalletConfigSectionProps> = ({ config
                 }`}
               >
                 {preferredChain === 'base' ? '● الشبكة المفضلة' : 'تعيين كمفضلة'}
-              </button>
-            </div>
-          </div>
-
-          {/* 3. TRON TRC-20 USDT */}
-          <div className={`border rounded-xl p-5 transition-all ${
-            preferredChain === 'tron'
-              ? 'border-emerald-500 bg-slate-900/90 shadow-lg shadow-emerald-500/10'
-              : 'border-slate-800 bg-slate-900/40'
-          }`}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-md bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400 font-bold text-xs">
-                  TRX
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-white">TRON TRC-20 (USDT)</h3>
-                  <span className="text-[11px] text-slate-400">الأكثر انتشاراً في التجارة العالمية</span>
-                </div>
-              </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded text-emerald-300 bg-emerald-500/20 border border-emerald-500/30">
-                مثبت وحقيقي ✓
-              </span>
-            </div>
-
-            <div className="relative mb-2">
-              <input
-                type="text"
-                value={tronWallet}
-                onChange={(e) => setTronWallet(e.target.value)}
-                dir="ltr"
-                className="w-full bg-slate-950 border border-emerald-500/40 rounded-lg px-3 py-2 text-xs font-mono text-emerald-300 focus:outline-none focus:border-emerald-400 transition-colors"
-              />
-              <button
-                type="button"
-                onClick={() => handleCopy(tronWallet, 'tron')}
-                className="absolute left-2 top-2 p-1 text-slate-400 hover:text-white transition-colors cursor-pointer"
-                title="نسخ العنوان"
-              >
-                {copiedKey === 'tron' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
-              <a
-                href={`https://tronscan.org/#/address/${tronWallet}`}
-                target="_blank"
-                rel="noreferrer"
-                className="text-red-400 hover:underline flex items-center gap-1 font-mono"
-              >
-                <span>فحص على Tronscan</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-
-              <button
-                type="button"
-                onClick={() => setPreferredChain('tron')}
-                className={`text-[11px] font-medium transition-colors cursor-pointer ${
-                  preferredChain === 'tron' ? 'text-emerald-400 font-semibold underline' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                {preferredChain === 'tron' ? '● الشبكة المفضلة' : 'تعيين كمفضلة'}
               </button>
             </div>
           </div>

@@ -47,7 +47,7 @@ export default function App() {
     baseWallet: '0x25c6a4F452e2201620C11C75b050D0700dAfE4F7',
     tronWallet: 'TFaw7VkUDSvHT2sV9rqAGLKj17eqhenB6q',
     solanaWallet: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
-    preferredChain: 'polygon',
+    preferredChain: 'tron',
     minProfitMarginUsd: 5.0,
     defaultCommissionRate: 22.5,
     autoExecute: true,
@@ -459,17 +459,17 @@ export default function App() {
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-300 font-mono mt-1">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-                      <span className="text-slate-400">Base / ETH (USDC):</span>
+                    <span className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded text-white">
+                      <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse"></span>
+                      <span className="text-red-300 font-bold">★ الأولوية: TRON (USDT):</span>
                       <a
-                        href="https://basescan.org/address/0x25c6a4F452e2201620C11C75b050D0700dAfE4F7"
+                        href="https://tronscan.org/#/address/TFaw7VkUDSvHT2sV9rqAGLKj17eqhenB6q"
                         target="_blank"
                         rel="noreferrer"
-                        className="text-blue-400 hover:underline font-semibold"
-                        title="عرض على Basescan"
+                        className="text-red-400 hover:underline font-semibold"
+                        title="عرض على Tronscan"
                       >
-                        0x25c6a4F452e2201620C11C75b050D0700dAfE4F7
+                        TFaw7VkUDSvHT2sV9rqAGLKj17eqhenB6q
                       </a>
                     </span>
                     <span className="hidden sm:inline text-slate-600">|</span>
@@ -488,16 +488,16 @@ export default function App() {
                     </span>
                     <span className="hidden sm:inline text-slate-600">|</span>
                     <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-red-400"></span>
-                      <span className="text-slate-400">TRON (USDT):</span>
+                      <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                      <span className="text-slate-400">Base / ETH (USDC):</span>
                       <a
-                        href="https://tronscan.org/#/address/TFaw7VkUDSvHT2sV9rqAGLKj17eqhenB6q"
+                        href="https://basescan.org/address/0x25c6a4F452e2201620C11C75b050D0700dAfE4F7"
                         target="_blank"
                         rel="noreferrer"
-                        className="text-red-400 hover:underline font-semibold"
-                        title="عرض على Tronscan"
+                        className="text-blue-400 hover:underline font-semibold"
+                        title="عرض على Basescan"
                       >
-                        TFaw7VkUDSvHT2sV9rqAGLKj17eqhenB6q
+                        0x25c6a4F452e2201620C11C75b050D0700dAfE4F7
                       </a>
                     </span>
                   </div>
@@ -677,7 +677,7 @@ export default function App() {
                 <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3">
                   <div className="text-[10px] text-slate-400 mb-1">دفع المشتري (تجزئة)</div>
                   <div className="text-base font-extrabold font-mono text-white">${instantDealResult.totalPaidByCustomerUsd.toFixed(2)}</div>
-                  <div className="text-[9px] text-slate-400 mt-0.5">USDC</div>
+                  <div className="text-[9px] text-slate-400 mt-0.5">{instantDealResult.currency || 'USDT'}</div>
                 </div>
 
                 <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3">
@@ -689,7 +689,7 @@ export default function App() {
                 <div className="bg-emerald-950/40 border border-emerald-500/40 rounded-xl p-3">
                   <div className="text-[10px] text-emerald-400 font-bold mb-1">صافي ربحك المحتسب</div>
                   <div className="text-base font-extrabold font-mono text-emerald-400">+${instantDealResult.netCommissionToUserUsd.toFixed(2)}</div>
-                  <div className="text-[9px] text-emerald-400 mt-0.5">ربح صافي 100%</div>
+                  <div className="text-[9px] text-emerald-400 mt-0.5">{instantDealResult.currency || 'USDT'} صافي</div>
                 </div>
               </div>
 
@@ -697,10 +697,12 @@ export default function App() {
               <div className="space-y-3">
                 <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-1.5">
                   <div className="text-[11px] text-slate-400 flex items-center justify-between">
-                    <span>محفظة استلام الأرباح المسجلة:</span>
-                    <span className="text-emerald-400 font-mono text-[10px]">Polygon PoS</span>
+                    <span>محفظة استلام الأرباح المستهدفة:</span>
+                    <span className="text-red-400 font-mono text-[10px] uppercase font-bold">
+                      {instantDealResult.chain === 'tron' ? 'TRON TRC-20' : instantDealResult.chain}
+                    </span>
                   </div>
-                  <div className="text-xs font-mono text-emerald-400 break-all select-all">
+                  <div className="text-xs font-mono text-emerald-400 break-all select-all font-semibold">
                     {instantDealResult.userRecipientWallet}
                   </div>
                 </div>
@@ -714,13 +716,25 @@ export default function App() {
                     {instantDealResult.deliveredItemKey}
                   </div>
                 </div>
+
+                {/* Clarification Alert */}
+                <div className="p-3 bg-blue-950/30 border border-blue-500/30 rounded-xl text-xs space-y-1 text-slate-300">
+                  <div className="text-blue-400 font-bold flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>طبيعة هذه العملية وكيف تصل الأموال الحقيقية:</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    هذا الزر يُجري <strong>اختبار محاكاة حقيقي (Sandbox Test)</strong> للتأكد من ربط محفظتك، واحتساب العمولات، وتوليد المفاتيح الرقمية. 
+                    الأموال الحقيقية من العملات المشفرة (USDT) تصل إلى محفظتك على Tronscan عندما يقوم زبون حقيقي بالطلب من <strong>رابط متجرك العام</strong> والتحويل المباشر.
+                  </p>
+                </div>
               </div>
 
               <button
                 onClick={() => setInstantDealResult(null)}
                 className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl transition-colors cursor-pointer text-sm"
               >
-                إغلاق وعرض التقرير في المخطط وسجل العمليات
+                إغلاق والعودة للوحة التحكم
               </button>
             </div>
           </div>

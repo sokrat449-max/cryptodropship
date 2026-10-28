@@ -43,7 +43,7 @@ let botConfig: WalletConfig = {
   baseWallet: '0x25c6a4F452e2201620C11C75b050D0700dAfE4F7',
   tronWallet: 'TFaw7VkUDSvHT2sV9rqAGLKj17eqhenB6q',
   solanaWallet: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
-  preferredChain: 'polygon',
+  preferredChain: 'tron',
   minProfitMarginUsd: 5.0,
   defaultCommissionRate: 22.5,
   autoExecute: true,
@@ -379,20 +379,27 @@ app.post('/api/bot/execute-instant-deal', (req, res) => {
   const supplierCost = item.wholesalePriceUsd;
   const netCommission = Number((totalPaid - supplierCost).toFixed(2));
 
+  const chosenChain = (req.body && req.body.chain) || botConfig.preferredChain || 'tron';
+  const isTron = chosenChain === 'tron';
+  const currency = isTron ? 'USDT' : 'USDC';
+  const recipientWallet = isTron ? botConfig.tronWallet : botConfig.polygonWallet;
+
   const randomHex = () => Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, '0');
-  const txHash = `0x${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}`;
+  const txHash = isTron 
+    ? `${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}`
+    : `0x${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}${randomHex()}`;
 
   const newExecution: OrderExecution = {
     txId: `ORD-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 899 + 100)}`,
     timestamp: new Date().toISOString(),
     productTitle: item.title,
     category: item.category,
-    chain: 'polygon',
-    currency: 'USDC',
+    chain: chosenChain,
+    currency,
     totalPaidByCustomerUsd: totalPaid,
     wholesaleSupplierCostUsd: supplierCost,
     netCommissionToUserUsd: netCommission,
-    userRecipientWallet: botConfig.polygonWallet,
+    userRecipientWallet: recipientWallet,
     onChainTxHash: txHash,
     deliveryStatus: 'COMPLETED',
     deliveredItemKey: `KEY-${item.category.slice(0, 3).toUpperCase()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
@@ -405,7 +412,7 @@ app.post('/api/bot/execute-instant-deal', (req, res) => {
 
   res.json({
     success: true,
-    message: `تم تنفيذ عملية البيع بنجاح! حُجزت عمولة +$${netCommission.toFixed(2)} USDC للمحفظة.`,
+    message: `تم تنفيذ عملية بيع على شبكة TRON بنجاح! العمولة المحسوبة: +$${netCommission.toFixed(2)} ${currency} لمحفظتك.`,
     execution: newExecution,
     totalOrders: executionLedger.length,
     totalCommissionEarned: Number(totalCommissionEarned.toFixed(2)),
@@ -421,15 +428,16 @@ app.get('/api/bot/auto-activity', async (_req, res) => {
   res.json({
     success: true,
     botActive: botConfig.autoExecute,
-    walletTarget: botConfig.polygonWallet,
+    preferredChain: botConfig.preferredChain,
+    walletTarget: botConfig.preferredChain === 'tron' ? botConfig.tronWallet : botConfig.polygonWallet,
     totalCommissionEarned: Number(totalCommissionEarned.toFixed(2)),
     totalVolume: Number(totalVolume.toFixed(2)),
     verifiedOnChainOrders: executionLedger.length,
     recentActivity: [
       {
         id: 'act-1',
-        title: 'مراقبة شبكة Polygon PoS',
-        details: `الاستماع للتحويلات الواردة لعنوانك: ${botConfig.polygonWallet.substring(0, 10)}...${botConfig.polygonWallet.substring(34)}`,
+        title: 'مراقبة شبكة TRON TRC-20 (الأولوية القصوى)',
+        details: `الاستماع للتحويلات الواردة لعنوان محفظة TRON: ${botConfig.tronWallet.substring(0, 8)}...${botConfig.tronWallet.substring(28)}`,
         status: 'ACTIVE_LISTENING',
         timestamp: new Date().toISOString(),
       },

@@ -95,7 +95,7 @@ Checkout directly: ${publicStoreUrl}`,
           </h1>
 
           <p className="text-sm text-slate-300 leading-relaxed">
-            ادفع مباشرة عبر العملات المستقرة (USDC على شبكة Polygon أو USDT على شبكة TRON) واستلم كود التفعيل أو رمز الـ QR فوراً خلال ثوانٍ معدودة.
+            ادفع مباشرة عبر العملات المستقرة (USDT على شبكة TRON TRC-20 كخيار أول ومفضّل، أو USDC على Polygon) واستلم كود التفعيل أو رمز الـ QR فوراً خلال ثوانٍ معدودة.
           </p>
 
           {/* Shareable Link Box */}
