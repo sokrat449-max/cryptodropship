@@ -411,6 +411,7 @@ app.post('/api/bot/execute-instant-deal', (req, res) => {
     totalCommissionEarned: Number(totalCommissionEarned.toFixed(2)),
     totalVolume: Number(totalVolume.toFixed(2)),
   });
+});
 
 // 6. Automated Bot Activity & Live On-Chain Synchronization
 app.get('/api/bot/auto-activity', async (_req, res) => {
