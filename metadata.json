@@ -1,0 +1,6 @@
+{
+  "name": "CryptoDropship AI Arbitrage",
+  "description": "منصة وبوت الوساطة الآلي للدروب شيبينغ بالعملات المستقرة وتقسيم العمولات المباشر",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
