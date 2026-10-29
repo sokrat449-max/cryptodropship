@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Allow: /store
+Allow: /api/marketing/feed.json
+
+Sitemap: https://cryptodropship.vercel.app/sitemap.xml

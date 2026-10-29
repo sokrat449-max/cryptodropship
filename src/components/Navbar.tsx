@@ -52,6 +52,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>متجر الزبائن (Store)</span>
           </button>
           <button
+            onClick={() => setActiveTab('marketing')}
+            className={`whitespace-nowrap transition-colors pb-1 border-b-2 cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'marketing'
+                ? 'border-amber-400 text-amber-400 font-bold'
+                : 'border-transparent text-amber-400/90 hover:text-amber-300'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+            <span>التسويق الآلي وجلب المشترين (Marketing)</span>
+          </button>
+          <button
             onClick={() => setActiveTab('dashboard')}
             className={`whitespace-nowrap transition-colors pb-1 border-b-2 cursor-pointer ${
               activeTab === 'dashboard'

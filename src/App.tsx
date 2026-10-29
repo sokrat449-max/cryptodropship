@@ -8,6 +8,7 @@ import { GeminiAdvisor } from './components/GeminiAdvisor';
 import { FeasibilityGuide } from './components/FeasibilityGuide';
 import { ProfitAnalyticsChart } from './components/ProfitAnalyticsChart';
 import { CustomerStore } from './components/CustomerStore';
+import { AutoMarketingHub } from './components/AutoMarketingHub';
 import { WalletConfig, ArbitrageItem, OrderExecution, MarketRates } from './types';
 import { 
   TrendingUp, 
@@ -27,6 +28,7 @@ import {
   Copy,
   Check,
   ShoppingBag,
+  Share2,
 } from 'lucide-react';
 import { initialOpportunities } from './data/opportunities';
 
@@ -355,11 +357,18 @@ export default function App() {
 
               <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
                 <button
+                  onClick={() => setActiveTab('marketing')}
+                  className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-extrabold px-5 py-3 rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition-all transform hover:scale-105 active:scale-95 cursor-pointer text-xs"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span>بدء التسويق الآلي وجلب المشترين</span>
+                </button>
+                <button
                   onClick={() => setActiveTab('store')}
-                  className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all transform hover:scale-105 active:scale-95 cursor-pointer text-xs"
+                  className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold px-5 py-3 rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all transform hover:scale-105 active:scale-95 cursor-pointer text-xs"
                 >
                   <ShoppingBag className="w-4 h-4" />
-                  <span>فتح متجر العملاء المباشر</span>
+                  <span>فتح متجر العملاء</span>
                 </button>
                 <a
                   href={`https://tronscan.org/#/address/${config.tronWallet}`}
@@ -367,7 +376,7 @@ export default function App() {
                   rel="noreferrer"
                   className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-semibold px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-colors text-xs border border-slate-700"
                 >
-                  <span>فحص Tronscan</span>
+                  <span>Tronscan</span>
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </a>
               </div>
@@ -622,6 +631,15 @@ export default function App() {
         {/* VIEW 6: FEASIBILITY & VERDICT */}
         {activeTab === 'feasibility' && (
           <FeasibilityGuide />
+        )}
+
+        {/* VIEW 7: AUTOMATED MARKETING & TRAFFIC HUB */}
+        {activeTab === 'marketing' && (
+          <AutoMarketingHub
+            opportunities={opportunities}
+            storeUrl="https://cryptodropship.vercel.app/store"
+            preferredWallet={config.tronWallet}
+          />
         )}
       </main>
 

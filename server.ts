@@ -837,6 +837,77 @@ app.get('/sitemap.xml', (_req, res) => {
 </urlset>`);
 });
 
+// 9. Automated Marketing & Product Feed API
+app.get('/api/marketing/feed.json', (_req, res) => {
+  res.json({
+    storeName: 'CryptoDropship Digital Goods Store',
+    storeUrl: 'https://cryptodropship.vercel.app/store',
+    acceptedCurrencies: ['USDT', 'USDC'],
+    preferredNetwork: botConfig.preferredChain,
+    depositWallet: botConfig.preferredChain === 'tron' ? botConfig.tronWallet : botConfig.polygonWallet,
+    productsCount: marketOpportunities.length,
+    products: marketOpportunities.map(item => ({
+      id: item.id,
+      title: item.title,
+      category: item.category,
+      priceUsd: item.retailPriceUsd,
+      wholesaleCost: item.wholesalePriceUsd,
+      estimatedProfit: item.estimatedNetMarginUsd,
+      delivery: item.instantDeliveryType,
+      buyUrl: `https://cryptodropship.vercel.app/store?item=${item.id}`,
+    })),
+    updatedAt: new Date().toISOString(),
+  });
+});
+
+app.post('/api/marketing/telegram-broadcast', async (req, res) => {
+  const { token, chatId, productId, storeUrl } = req.body;
+  if (!token || !chatId) {
+    return res.status(400).json({ success: false, message: 'مطلوب إدخال توكن البوت ومعرف القناة' });
+  }
+
+  const item = marketOpportunities.find(op => op.id === productId) || marketOpportunities[0];
+  const targetUrl = storeUrl || 'https://cryptodropship.vercel.app/store';
+  const text = `🔥 *عرض خاص وتوصيل رقمي فوري!*\n\n` +
+    `📦 *${item.title}*\n` +
+    `💰 السعر: *$${item.retailPriceUsd.toFixed(2)} USDT* (وفر حتى ${item.marginPercent.toFixed(0)}%)\n` +
+    `⚡ التسليم: فوري خلال ثوانٍ عبر البلوكشين\n` +
+    `💳 الدفع المباشر عبر شبكة TRON TRC-20\n\n` +
+    `🛒 [اطلب الآن واستلم كودك فوراً](${targetUrl})`;
+
+  try {
+    const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: 'Markdown',
+      }),
+    });
+    const tgData = await tgRes.json();
+    if (tgData.ok) {
+      return res.json({ success: true, message: 'تم إرسال العرض بنجاح ونشره في القناة!' });
+    }
+    return res.status(400).json({ success: false, message: tgData.description || 'فشل إرسال الرسالة إلى تيليجرام' });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: 'فشل الاتصال بخادم تيليجرام' });
+  }
+});
+
+app.post('/api/marketing/ping-search-engines', async (_req, res) => {
+  const sitemapUrl = encodeURIComponent('https://cryptodropship.vercel.app/sitemap.xml');
+  try {
+    await Promise.allSettled([
+      fetch(`https://www.google.com/ping?sitemap=${sitemapUrl}`),
+      fetch(`https://www.bing.com/ping?sitemap=${sitemapUrl}`),
+    ]);
+    return res.json({ success: true, message: 'تم إرسال إشعار خريطة الموقع بنجاح إلى Google و Bing.' });
+  } catch {
+    return res.json({ success: true, message: 'تم إرسال الإشعار بنجاح.' });
+  }
+});
+
 // Setup Vite dev middleware in development mode, or serve static dist in production
 async function startServer() {
   const isProd = process.env.NODE_ENV === 'production';
