@@ -26,8 +26,9 @@ import {
   Key,
   Copy,
   Check,
-  ShoppingBag
+  ShoppingBag,
 } from 'lucide-react';
+import { initialOpportunities } from './data/opportunities';
 
 export default function App() {
   const getInitialTab = () => {
@@ -35,6 +36,9 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get('tab');
       if (tab) return tab;
+
+      const path = window.location.pathname.replace(/^\//, '').toLowerCase();
+      if (path === 'store' || path === 'shop' || path === 'market' || path === 'products') return 'store';
     }
     return 'dashboard';
   };
@@ -55,8 +59,8 @@ export default function App() {
     notificationEmail: 'sokrat9944@gmail.com',
   });
 
-  // Market Opportunities
-  const [opportunities, setOpportunities] = useState<ArbitrageItem[]>([]);
+  // Market Opportunities (Guaranteed populated from initial catalogue)
+  const [opportunities, setOpportunities] = useState<ArbitrageItem[]>(initialOpportunities);
 
   // Execution Ledger (Starts at 0 real transactions)
   const [ledger, setLedger] = useState<OrderExecution[]>([]);
@@ -97,63 +101,65 @@ export default function App() {
   // Load Initial Data
   const fetchData = async () => {
     setIsRefreshing(true);
+    const getJson = async (res: Response) => {
+      const ct = res.headers.get('content-type');
+      if (res.ok && ct && ct.includes('application/json')) {
+        try {
+          return await res.json();
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    };
+
     try {
       // 1. Fetch Config
       const configRes = await fetch('/api/bot/config');
-      if (configRes.ok) {
-        const cData = await configRes.json();
-        if (cData.success && cData.config) setConfig(cData.config);
-      }
+      const cData = await getJson(configRes);
+      if (cData?.success && cData?.config) setConfig(cData.config);
 
       // 2. Fetch Opportunities
       const opRes = await fetch('/api/arbitrage/opportunities');
-      if (opRes.ok) {
-        const opData = await opRes.json();
-        if (opData.success && opData.opportunities) setOpportunities(opData.opportunities);
+      const opData = await getJson(opRes);
+      if (opData?.success && opData?.opportunities && opData.opportunities.length > 0) {
+        setOpportunities(opData.opportunities);
       }
 
       // 3. Fetch Ledger & Auto Activity
       const autoRes = await fetch('/api/bot/auto-activity');
-      if (autoRes.ok) {
-        const aData = await autoRes.json();
-        if (aData.success) {
-          setTotalCommissionEarned(aData.totalCommissionEarned);
-          setTotalVolume(aData.totalVolume);
-          setAutoActivity(aData.recentActivity || []);
-        }
+      const aData = await getJson(autoRes);
+      if (aData?.success) {
+        setTotalCommissionEarned(aData.totalCommissionEarned);
+        setTotalVolume(aData.totalVolume);
+        setAutoActivity(aData.recentActivity || []);
       }
 
       const ledRes = await fetch('/api/bot/ledger');
-      if (ledRes.ok) {
-        const ledData = await ledRes.json();
-        if (ledData.success && ledData.ledger) {
-          setLedger(ledData.ledger);
-        }
+      const ledData = await getJson(ledRes);
+      if (ledData?.success && ledData?.ledger) {
+        setLedger(ledData.ledger);
       }
 
       // 4. Fetch Rates
       const ratesRes = await fetch('/api/market-rates');
-      if (ratesRes.ok) {
-        const rData = await ratesRes.json();
-        if (rData.success) {
-          if (rData.rates) setRates(rData.rates);
-          if (rData.gasFees) setGasFees(rData.gasFees);
-        }
+      const rData = await getJson(ratesRes);
+      if (rData?.success) {
+        if (rData.rates) setRates(rData.rates);
+        if (rData.gasFees) setGasFees(rData.gasFees);
       }
 
       // 5. Query Real Live Balances from Blockchain RPC
       const balRes = await fetch('/api/wallets/live-balances');
-      if (balRes.ok) {
-        const bData = await balRes.json();
-        if (bData.success && bData.wallets) {
-          setLiveBalances({
-            polygonUsdc: bData.wallets.polygon?.usdcBalance || '0.00',
-            polygonPol: bData.wallets.polygon?.nativePolBalance || '0.0000',
-            baseUsdc: bData.wallets.base?.usdcBalance || '0.00',
-            baseEth: bData.wallets.base?.nativeEthBalance || '0.0000',
-            tronUsdt: bData.wallets.tron?.usdtBalance || '0.00',
-          });
-        }
+      const bData = await getJson(balRes);
+      if (bData?.success && bData?.wallets) {
+        setLiveBalances({
+          polygonUsdc: bData.wallets.polygon?.usdcBalance || '0.00',
+          polygonPol: bData.wallets.polygon?.nativePolBalance || '0.0000',
+          baseUsdc: bData.wallets.base?.usdcBalance || '0.00',
+          baseEth: bData.wallets.base?.nativeEthBalance || '0.0000',
+          tronUsdt: bData.wallets.tron?.usdtBalance || '0.00',
+        });
       }
     } catch (err) {
       console.error('Error fetching data:', err);

@@ -32,8 +32,8 @@ export const CustomerStore: React.FC<CustomerStoreProps> = ({
   const [copiedPromo, setCopiedPromo] = useState<string | null>(null);
 
   const publicStoreUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}?tab=store` 
-    : 'https://ais-pre-p6zjiqo3gyh7rwte72imre-128865294963.europe-west2.run.app';
+    ? `${window.location.origin}/store` 
+    : 'https://cryptodropship.vercel.app/store';
 
   const categories = [
     { id: 'all', label: 'جميع المنتجات الرقمية' },
